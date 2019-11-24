@@ -1,5 +1,7 @@
 # Superdog
 
+import pymongo
+
 """
  Let people create a "league" (group) of up to 10 players
  Create team names
