@@ -1,6 +1,8 @@
 # Superdog
 
-import pymongo
+import time
+#import pymongo
+from pymongo import MongoClient
 
 """
  Let people create a "league" (group) of up to 10 players
@@ -46,8 +48,14 @@ def setup():
         if margin < spread:
             superdogWin += 1
 
+    print "\nReport at " + str(time.ctime()) + ":"
     print "outrightWin:", outrightWin
     print "superdogWin:", superdogWin
+
+def init_mongo():
+    client = MongoClient()  # MongoClient('localhost', 27017)
+    db = client.test_database  # or ... client['test-database']
+    collection = db.test_collection  # a group of stored documents
 
 if __name__ == "__main__":
     setup()
