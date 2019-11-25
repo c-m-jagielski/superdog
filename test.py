@@ -14,6 +14,23 @@ from pymongo import MongoClient
  Log outright wins and overall W/L records of all teams
 """
 
+"""
+  Main thread:
+    initialize users in db with 0 wins & any user data
+    input all possible games for this week
+    add those games to the database
+    users select their Superdog (pick a "loser" team to beat the spread)
+    add those selections
+    when games end,
+        add the game outcomes to the db
+        query who picked what
+        calculate outright wins
+        calculate superdog wins
+        add user updates to the db
+    query user db to show WL record after this week
+    start again the next week!
+"""
+
 def setup():
     print "Welcome to the Superdog showdown!"
 
