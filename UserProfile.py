@@ -1,5 +1,4 @@
 import time
-from pymongo import MongoClient
 
 class UserProfile:
     def __init__(self, name, email, photo):
