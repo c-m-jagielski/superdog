@@ -1,7 +1,7 @@
 # Superdog
 
 import time
-#from pymongo import MongoClient
+# from pymongo import MongoClient
 
 """
  Let people create a "league" (group) of up to 10 players
@@ -30,6 +30,7 @@ import time
     start again the next week!
 """
 
+
 def setup():
     print("Welcome to the Superdog showdown!")
 
@@ -53,7 +54,7 @@ def setup():
     }
     multiplier = -1 if winner != expectedWinner else 1
     margin = (scores[winner] - scores[loser]) * multiplier
-    #print("margin:", margin)
+    # print("margin:", margin)
 
     # Did your Superdog team get an outright win?
     if myTeam == winner:
@@ -67,6 +68,7 @@ def setup():
     print("\nReport at " + str(time.ctime()) + ":")
     print("outrightWin:", outrightWin)
     print("superdogWin:", superdogWin)
+
 
 """
 def init_mongo():

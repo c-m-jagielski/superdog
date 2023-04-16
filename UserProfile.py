@@ -1,5 +1,6 @@
 import time
 
+
 class UserProfile:
     def __init__(self, name, email, photo):
         self.name = name
@@ -29,9 +30,10 @@ class UserProfile:
         :param superdogWin:
         :return:
         """
-        #TODO do this in the db instead of class variables
+        # TODO do this in the db instead of class variables
         self.outrightWins += outrightWin
         self.superdogWins += superdogWin
+
 
 if __name__ == "__main__":
     userName = "Bob"
