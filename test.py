@@ -32,7 +32,7 @@ from pymongo import MongoClient
 """
 
 def setup():
-    print "Welcome to the Superdog showdown!"
+    print("Welcome to the Superdog showdown!")
 
     # These should be "global"... persist across all games
     outrightWin = 0
@@ -54,7 +54,7 @@ def setup():
     }
     multiplier = -1 if winner != expectedWinner else 1
     margin = (scores[winner] - scores[loser]) * multiplier
-    #print "margin:", margin
+    #print("margin:", margin)
 
     # Did your Superdog team get an outright win?
     if myTeam == winner:
