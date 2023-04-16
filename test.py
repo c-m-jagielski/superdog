@@ -75,5 +75,8 @@ def init_mongo():
     collection = db.test_collection  # a group of stored documents
 """
 
+def test_placeholder():
+    pass
+
 if __name__ == "__main__":
     setup()
