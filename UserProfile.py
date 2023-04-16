@@ -20,7 +20,7 @@ class UserProfile:
         :param game:
         :return:
         """
-        print "game:", game
+        print("game:", game)
 
     def updateRecord(self, outrightWin, superdogWin):
         """

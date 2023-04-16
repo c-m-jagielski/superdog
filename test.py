@@ -65,9 +65,9 @@ def setup():
         if margin < spread:
             superdogWin += 1
 
-    print "\nReport at " + str(time.ctime()) + ":"
-    print "outrightWin:", outrightWin
-    print "superdogWin:", superdogWin
+    print("\nReport at " + str(time.ctime()) + ":")
+    print("outrightWin:", outrightWin)
+    print("superdogWin:", superdogWin)
 
 def init_mongo():
     client = MongoClient()  # MongoClient('localhost', 27017)
