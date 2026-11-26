@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Superdog Showdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: Saturday-morning gameday, loud but tidy
+   IDEA: a stadium pick board — each game a scoreboard strip, underdog lit in orange
+   PICTURE: the week's slate itself, stacked strips with spread chips and a big PICK button
+   COLOUR and TYPE: turf green field, chalk white, dog orange #ff7a00; Barlow Condensed + Barlow
+   LAYOUT: header band with week stepper, tabs, board / standings / commissioner views */
+:root{color-scheme:light dark;--bg:light-dark(#f4f6f1,#0b1d16);--card:light-dark(#fff,#12291f);--ink:light-dark(#0d1f17,#eef3ee);--mute:light-dark(#5b6b62,#9db3a6);--line:light-dark(#dbe3dc,#21402f);--turf:#0f3d2e;--dog:#ff7a00;--win:#1f8f4e;--loss:#c2362f}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.cond{font-family:"Barlow Condensed",Impact,sans-serif;font-weight:800;line-height:1.05;margin:0}
+.top{background:var(--turf);color:#fff;padding:clamp(22px,4vw,44px) max(5vw,16px) 0;background-image:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(255,255,255,.07) calc(10% - 2px) 10%)}
+.top h1{font-size:clamp(38px,7vw,64px);letter-spacing:.5px}.top h1 b{color:var(--dog)}
+.sub{color:#cfe3d7;margin:6px 0 18px;max-width:60ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:4px;overflow-x:auto}.tabs a{flex:none;color:#cfe3d7;text-decoration:none;padding:12px 16px;font:600 17px "Barlow Condensed";border-radius:10px 10px 0 0}
+.tabs a.on{background:var(--bg);color:var(--ink)}
+.wk{display:flex;align-items:center;gap:6px;color:#fff;padding-bottom:8px}.wk span{font:800 22px "Barlow Condensed";min-width:6.5em;text-align:center}
+button,.btn{font:600 16px Barlow,sans-serif;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--dog);outline-offset:2px}
+button.pri{background:var(--dog);border-color:var(--dog);color:#1a0d00}button.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:16px Barlow,sans-serif;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
+main{max-width:1000px;margin:0 auto;padding:clamp(18px,3vw,36px) max(4vw,14px) 60px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.note.warn{border-color:var(--dog)}
+.me{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.slate{display:grid;gap:12px}
+.g{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-left:6px solid var(--line)}
+.g.mine{border-left-color:var(--dog);box-shadow:0 0 0 2px var(--dog) inset}
+.teams{display:grid;gap:4px}
+.t{display:flex;gap:10px;align-items:baseline;justify-content:space-between;font:700 22px "Barlow Condensed"}
+.t .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.t .sc{font-variant-numeric:tabular-nums;font-size:26px}
+.t.dog .nm{color:var(--dog)}
+.chip{display:inline-block;font:600 13px Barlow;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--ink);white-space:nowrap;vertical-align:middle;margin-left:6px}
+.chip.dogc{background:var(--dog);color:#1a0d00}.chip.w{background:var(--win);color:#fff}.chip.l{background:var(--loss);color:#fff}
+.meta{color:var(--mute);font-size:14px;margin-top:4px}
+.who{color:var(--mute);font-size:14px;margin-top:6px}
+.empty{text-align:center;padding:40px 16px;color:var(--mute);background:var(--card);border:1px dashed var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}th{font:600 14px Barlow;color:var(--mute)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rank{font:800 26px "Barlow Condensed";color:var(--dog);width:2.2em}
+.pts{font:800 26px "Barlow Condensed"}
+h2{font-size:clamp(28px,4vw,38px);margin:0 0 12px}h3{font-size:22px;margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adm{display:grid;grid-template-columns:minmax(0,1.4fr) 84px 84px auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.adm .lbl{font:700 18px "Barlow Condensed"}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.rules{color:var(--mute);font-size:15px}
+.scroll{overflow-x:auto}
+@media(max-width:600px){.g{grid-template-columns:1fr}.g button{width:100%}.adm{grid-template-columns:1fr 1fr}.adm .lbl{grid-column:1/-1}table{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style></head><body>
+<header class="top">
+  <h1>SUPER<b>DOG</b> SHOWDOWN</h1>
+  <p class="sub" id="lname">Pick one underdog a week. Cover the spread for points, win outright for more.</p>
+  <div class="bar">
+    <nav class="tabs" id="tabs"><a href="#board" data-v="board">Pick board</a><a href="#standings" data-v="standings">Standings</a><a href="#commish" data-v="commish" id="tabC" hidden>Commissioner</a><a href="#rules" data-v="rules">How it works</a></nav>
+    <div class="wk"><button class="ghost" id="prev" aria-label="Previous week">‹</button><span id="wkl">Week 1</span><button class="ghost" id="next" aria-label="Next week">›</button></div>
+  </div>
+</header>
+<main>
+  <div id="status" class="note" hidden></div>
+  <section id="v-board">
+    <div class="note me" id="join"></div>
+    <div class="slate" id="slate"></div>
+  </section>
+  <section id="v-standings" hidden><h2>Season standings</h2><div class="scroll" id="stand"></div><h3>Week by week</h3><div class="scroll" id="weekly"></div></section>
+  <section id="v-commish" hidden>
+    <h2>Commissioner desk</h2>
+    <div class="note"><h3 style="margin-top:0">League settings</h3>
+      <form id="fset" class="grid"><label>League name<input id="sName" maxlength="60"></label><label>Current week<input id="sWeek" type="number" min="0" max="20"></label><label>Points for a cover<input id="sCov" type="number" min="0" step="0.5"></label><label>Points for outright win<input id="sOut" type="number" min="0" step="0.5"></label><button class="pri">Save settings</button></form></div>
+    <div class="note"><h3 style="margin-top:0">Add a game to <span id="addWk">week 1</span></h3>
+      <form id="fgame" class="grid"><label>Favorite<input id="gFav" required maxlength="40" placeholder="Georgia"></label><label>Underdog<input id="gDog" required maxlength="40" placeholder="Georgia Tech"></label><label>Spread (points)<input id="gSp" type="number" min="0.5" step="0.5" required placeholder="14.5"></label><label>Kickoff<input id="gKick" type="datetime-local"></label><button class="pri">Add game</button></form></div>
+    <div class="note"><h3 style="margin-top:0">Enter final scores</h3><p class="rules" style="margin-top:0">Favorite score, then underdog score. Marking a game final scores everyone's picks.</p><div id="admList"></div></div>
+  </section>
+  <section id="v-rules" hidden><h2>How it works</h2><div class="note rules">
+    <p>Based on College GameDay's weekly Superdog pick. Each week every player picks <b>one underdog</b>.</p>
+    <p><b>Cover:</b> your underdog loses by less than the spread → <span id="rCov">1</span> pt.<br><b>Outright win:</b> your underdog wins the game → <span id="rOut">2</span> pts.<br>Losing by exactly the spread is a push (0 pts). Picks lock at kickoff.</p>
+    <p>The commissioner (the app's owner, and anyone shared as Editor) adds each week's games and enters the final scores. Players need Contributor access to join and pick.</p></div></section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S={league:{name:'',week:1,cover:1,outright:2},games:[],players:{},picks:{},names:{}};
+let db=null,user=null,me=null,admin=false,canWrite=true,viewWeek=null,view='board',loaded=false;
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2600)};
+const status=(m,warn)=>{const s=$('#status');s.hidden=!m;s.textContent=m||'';s.classList.toggle('warn',!!warn)};
+const num=(v,d)=>{const n=Number(v);return Number.isFinite(n)?n:d};
+const wk=()=>viewWeek??num(S.league.week,1);
+const started=g=>g.final||(g.kick&&Date.parse(g.kick)<=Date.now());
+const fmtKick=k=>{if(!k)return'Kickoff TBA';const d=new Date(k);return isNaN(d)?'Kickoff TBA':d.toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})};
+const spr=n=>'+'+num(n,0);
+// scoring, from the original test.py logic: dog wins outright, or loses by less than the spread
+function result(g){
+  if(!g||!g.final)return null;
+  const m=num(g.dogScore,0)-num(g.favScore,0);
+  if(m>0)return{k:'out',pts:num(S.league.outright,2),label:'Outright win'};
+  if(m+num(g.spread,0)>0)return{k:'cov',pts:num(S.league.cover,1),label:'Covered'};
+  if(m+num(g.spread,0)===0)return{k:'push',pts:0,label:'Push'};
+  return{k:'loss',pts:0,label:'Missed'};
+}
+const nameOf=id=>{const p=S.players[id];return(p&&p.team)||S.names[id]||'Player'};
+const gameById=id=>S.games.find(g=>g.id===id);
+
+function renderJoin(){
+  const el=$('#join');
+  if(!db){el.innerHTML='<div>Sign in to claude.ai to join the league and make picks.</div>';return}
+  if(!me){el.innerHTML='<div>Couldn\'t identify you, so picks are read-only on this visit.</div>';return}
+  const p=S.players[me];
+  if(!p){
+    el.innerHTML=canWrite?`<form id="fjoin" class="row" style="width:100%"><div style="flex:1 1 220px"><b class="cond" style="font-size:22px">Join the league</b><div class="meta">Pick a team name everyone will see on the standings.</div></div><input id="jTeam" maxlength="30" placeholder="Team name" style="flex:1 1 200px" required><button class="pri">Join</button></form>`
+      :'<div>You can watch the standings. Ask the commissioner to share this app with you as a Contributor to join.</div>';
+    return;
+  }
+  const pk=(S.picks[me]||{})['w'+wk()],g=gameById(pk);
+  el.innerHTML=`<div><b class="cond" style="font-size:22px">${esc(p.team)}</b><div class="meta">${g?`Week ${wk()} Superdog: <b>${esc(g.dog)}</b> ${spr(g.spread)} vs ${esc(g.fav)}`:`No pick yet for week ${wk()}`}</div></div><button id="rename">Rename team</button>`;
+}
+
+function renderBoard(){
+  renderJoin();
+  const games=S.games.filter(g=>num(g.week,0)===wk()).sort((a,b)=>(a.kick||'~').localeCompare(b.kick||'~')||a.dog.localeCompare(b.dog));
+  if(!loaded){$('#slate').innerHTML='<div class="empty">Loading the slate…</div>';return}
+  if(!games.length){$('#slate').innerHTML=`<div class="empty"><b class="cond" style="font-size:24px;color:var(--ink)">No games posted for week ${wk()} yet</b><br>${admin?'Add this week\'s games on the Commissioner tab.':'The commissioner hasn\'t posted the slate yet.'}</div>`;return}
+  const myPick=me&&(S.picks[me]||{})['w'+wk()];const myG=gameById(myPick);const locked=myG&&started(myG);
+  const joined=me&&S.players[me]&&canWrite;
+  $('#slate').innerHTML=games.map(g=>{
+    const r=result(g),mine=myPick===g.id;
+    const pickers=Object.keys(S.picks).filter(u=>S.picks[u]['w'+wk()]===g.id&&S.players[u]).map(nameOf);
+    let btn='';
+    if(joined){btn=mine?`<button class="pri" disabled>${locked?'Locked in':'Your pick'}</button>`:`<button data-pick="${esc(g.id)}" ${started(g)||locked?'disabled':''}>${started(g)?'Kicked off':locked?'Pick locked':'Pick '+esc(g.dog)}</button>`}
+    return `<article class="g${mine?' mine':''}"><div><div class="teams">
+      <div class="t"><span class="nm">${esc(g.fav)}</span><span class="sc">${g.final?esc(num(g.favScore,0)):''}</span></div>
+      <div class="t dog"><span class="nm">${esc(g.dog)} <span class="chip dogc">${esc(spr(g.spread))}</span></span><span class="sc">${g.final?esc(num(g.dogScore,0)):''}</span></div></div>
+      <div class="meta">${g.final?'Final':esc(fmtKick(g.kick))}${r?` <span class="chip ${r.pts>0?'w':r.k==='push'?'':'l'}">${esc(r.label)}${r.pts?' · +'+esc(r.pts):''}</span>`:''}</div>
+      ${pickers.length?`<div class="who">Picked by ${pickers.map(esc).join(', ')}</div>`:''}</div>${btn}</article>`}).join('');
+}
+
+function tally(){
+  const rows=Object.keys(S.players).map(id=>{
+    const o={id,team:nameOf(id),pts:0,out:0,cov:0,miss:0,weeks:{}};
+    const pk=S.picks[id]||{};
+    for(const k in pk){const g=gameById(pk[k]);const r=result(g);const w=k.slice(1);
+      if(!g){continue}o.weeks[w]={g,r};if(!r)continue;o.pts+=r.pts;if(r.k==='out'){o.out++;o.cov++}else if(r.k==='cov')o.cov++;else if(r.k==='loss')o.miss++}
+    return o});
+  return rows.sort((a,b)=>b.pts-a.pts||b.out-a.out||a.team.localeCompare(b.team));
+}
+function renderStandings(){
+  const rows=tally();
+  if(!rows.length){$('#stand').innerHTML='<div class="empty">No players have joined yet.</div>';$('#weekly').innerHTML='';return}
+  let rank=0,prev=null;
+  $('#stand').innerHTML=`<table class="stack"><thead><tr><th>#</th><th>Team</th><th class="n">Points</th><th class="n">Covers</th><th class="n">Outright</th><th class="n">Misses</th></tr></thead><tbody>${rows.map((r,i)=>{if(prev===null||r.pts!==prev.pts||r.out!==prev.out)rank=i+1;prev=r;return`<tr><td class="rank">${rank}</td><td><b>${esc(r.team)}</b>${r.id===me?' <span class="chip">you</span>':''}</td><td class="n pts">${esc(r.pts)}</td><td class="n">${r.cov}</td><td class="n">${r.out}</td><td class="n">${r.miss}</td></tr>`}).join('')}</tbody></table>`;
+  const weeks=[...new Set(S.games.map(g=>num(g.week,0)))].sort((a,b)=>a-b);
+  $('#weekly').innerHTML=weeks.length?`<table><thead><tr><th>Team</th>${weeks.map(w=>`<th>Wk ${w}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.team)}</b></td>${weeks.map(w=>{const x=r.weeks[w];if(!x)return'<td>—</td>';const c=x.r?(x.r.pts>0?'w':x.r.k==='push'?'':'l'):'';return`<td style="white-space:nowrap">${esc(x.g.dog)}${x.r?` <span class="chip ${c}">${x.r.pts>0?'+'+esc(x.r.pts):esc(x.r.label)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table>`:'';
+}
+function renderAdmin(){
+  if(!admin)return;
+  $('#addWk').textContent='week '+wk();
+  const games=S.games.filter(g=>num(g.week,0)===wk());
+  $('#admList').innerHTML=games.length?games.map(g=>`<div class="adm" data-id="${esc(g.id)}"><div class="lbl">${esc(g.fav)} vs ${esc(g.dog)} <span class="chip dogc">${esc(spr(g.spread))}</span></div>
+    <input type="number" min="0" aria-label="${esc(g.fav)} score" data-f="favScore" value="${g.favScore??''}" placeholder="Fav">
+    <input type="number" min="0" aria-label="${esc(g.dog)} score" data-f="dogScore" value="${g.dogScore??''}" placeholder="Dog">
+    <button class="pri" data-act="final">${g.final?'Update final':'Mark final'}</button><button data-act="del">Delete</button></div>`).join(''):'<div class="meta">No games this week yet.</div>';
+}
+function render(){
+  const L=S.league;
+  $('#lname').textContent=(L.name?L.name+' · ':'')+'Pick one underdog a week. Cover the spread for points, win outright for more.';
+  $('#wkl').textContent='Week '+wk()+(wk()===num(L.week,1)?'':' ·  past');
+  $('#rCov').textContent=num(L.cover,1);$('#rOut').textContent=num(L.outright,2);
+  $('#tabC').hidden=!admin;
+  for(const v of['board','standings','commish','rules'])$('#v-'+v).hidden=v!==view;
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.v===view));
+  if(view==='board')renderBoard();if(view==='standings')renderStandings();if(view==='commish')renderAdmin();
+}
+function route(){const h=location.hash.slice(1);view=['board','standings','commish','rules'].includes(h)&&(h!=='commish'||admin)?h:'board';render()}
+window.addEventListener('hashchange',route);
+$('#prev').onclick=()=>{viewWeek=Math.max(0,wk()-1);render()};
+$('#next').onclick=()=>{viewWeek=Math.min(20,wk()+1);render()};
+
+async function write(fn,ok){try{await fn();if(ok)toast(ok)}catch(e){if(e&&e.code==='invalid_argument'){canWrite=false;toast('You don\'t have permission to change that.');render()}else toast('Couldn\'t save — try again.')}}
+
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target;
+  if(f.id==='fjoin'){const t=$('#jTeam').value.trim().slice(0,30);if(t)write(()=>db.doc('players/'+me).set({team:t,joined:new Date().toISOString()}),'Welcome to the league!')}
+  if(f.id==='fset'){write(()=>db.doc('league/main').set({name:$('#sName').value.trim().slice(0,60),week:Math.round(num($('#sWeek').value,1)),cover:num($('#sCov').value,1),outright:num($('#sOut').value,2)}),'Settings saved');viewWeek=null}
+  if(f.id==='fgame'){const k=$('#gKick').value;const g={week:wk(),fav:$('#gFav').value.trim().slice(0,40),dog:$('#gDog').value.trim().slice(0,40),spread:Math.abs(num($('#gSp').value,0)),kick:k?new Date(k).toISOString():'',final:false};
+    if(!g.fav||!g.dog||!g.spread)return;write(()=>db.collection('games').add(g),'Game added');f.reset()}
+});
+document.addEventListener('click',e=>{
+  const p=e.target.closest('[data-pick]');
+  if(p){const id=p.dataset.pick;const cur={...(S.picks[me]||{})};cur['w'+wk()]=id;S.picks={...S.picks,[me]:cur};render();write(()=>db.doc('picks/'+me).set(cur),'Superdog locked in for week '+wk());return}
+  if(e.target.id==='rename'){const el=$('#join');el.innerHTML=`<form id="fjoin" class="row" style="width:100%"><input id="jTeam" maxlength="30" value="${esc(S.players[me].team)}" style="flex:1 1 200px" required><button class="pri">Save name</button></form>`;$('#jTeam').focus();return}
+  const a=e.target.closest('[data-act]');
+  if(a){const row=a.closest('.adm'),id=row.dataset.id,g=gameById(id);if(!g)return;
+    if(a.dataset.act==='del'){if(a.dataset.sure){write(()=>db.doc('games/'+id).delete(),'Game deleted')}else{a.dataset.sure=1;a.textContent='Tap to confirm'}return}
+    const fs=row.querySelector('[data-f=favScore]').value,ds=row.querySelector('[data-f=dogScore]').value;
+    if(fs===''||ds===''){toast('Enter both scores first');return}
+    write(()=>db.doc('games/'+id).update({favScore:num(fs,0),dogScore:num(ds,0),final:true}),'Final saved — standings updated')}
+});
+
+function fillSettings(){const L=S.league;$('#sName').value=L.name||'';$('#sWeek').value=num(L.week,1);$('#sCov').value=num(L.cover,1);$('#sOut').value=num(L.outright,2)}
+async function loadNames(){if(!user)return;const ids=Object.keys(S.players).filter(i=>!S.names[i]);if(!ids.length)return;try{const ps=await user.profiles(ids);for(const i of ids)S.names[i]=(ps[i]&&ps[i].name)||'';render()}catch(e){}}
+
+async function init(){
+  render();
+  [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
+  if(!db){loaded=true;status('Sign in to claude.ai to see this league.',true);render();return}
+  if(user){try{me=await user.id()}catch(e){}try{admin=!!(await user.canEdit())}catch(e){}try{const c=await user.can('data.write');if(c===false)canWrite=false}catch(e){}}
+  const timer=setTimeout(()=>status('Can\'t reach the league data yet — it may be out of date.',true),10000);
+  const done=s=>{if(!s.metadata.fromCache){clearTimeout(timer);status('')}};
+  const err=e=>{clearTimeout(timer);loaded=true;status('The league data stopped updating. Reopen the app to reconnect.',true);render()};
+  db.doc('league/main').onSnapshot(s=>{S.league={...S.league,...(s.exists?s.data():{})};fillSettings();done(s);render()},err);
+  db.collection('games').onSnapshot(s=>{S.games=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;done(s);render()},err);
+  db.collection('players').onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.players=o;done(s);render();loadNames()},err);
+  db.collection('picks').onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.picks=o;done(s);render()},err);
+  route();
+}
+fillSettings();route();init();
+}
+</script></body></html>
