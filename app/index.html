@@ -81,6 +81,7 @@ label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
       <form id="fset" class="grid"><label>League name<input id="sName" maxlength="60"></label><label>Current week<input id="sWeek" type="number" min="0" max="20"></label><label>Points for a cover<input id="sCov" type="number" min="0" step="0.5"></label><label>Points for outright win<input id="sOut" type="number" min="0" step="0.5"></label><button class="pri">Save settings</button></form></div>
     <div class="note"><h3 style="margin-top:0">Add a game to <span id="addWk">week 1</span></h3>
       <form id="fgame" class="grid"><label>Favorite<input id="gFav" required maxlength="40" placeholder="Georgia"></label><label>Underdog<input id="gDog" required maxlength="40" placeholder="Georgia Tech"></label><label>Spread (points)<input id="gSp" type="number" min="0.5" step="0.5" required placeholder="14.5"></label><label>Kickoff<input id="gKick" type="datetime-local"></label><button class="pri">Add game</button></form></div>
+    <div class="note"><h3 style="margin-top:0">Import slate from file</h3><p class="rules" style="margin-top:0">Choose the <code>slate.json</code> made by <code>fetch_slate.py</code>. New games are added with their spreads; games already here keep their spread and only get final scores filled in. Re-import after games finish.</p><input type="file" id="fSlate" accept=".json,application/json"></div>
     <div class="note"><h3 style="margin-top:0">Enter final scores</h3><p class="rules" style="margin-top:0">Favorite score, then underdog score. Marking a game final scores everyone's picks.</p><div id="admList"></div></div>
   </section>
   <section id="v-rules" hidden><h2>How it works</h2><div class="note rules">
@@ -241,6 +242,28 @@ document.addEventListener('click',e=>{
     const fs=row.querySelector('[data-f=favScore]').value,ds=row.querySelector('[data-f=dogScore]').value;
     if(fs===''||ds===''){toast('Enter both scores first');return}
     write(()=>db.doc('games/'+id).update({favScore:num(fs,0),dogScore:num(ds,0),final:true}),'Final saved — standings updated')}
+});
+
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='fSlate')return;
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  let j;try{j=JSON.parse(await file.text());if(!j||!Array.isArray(j.games))throw 0}catch(_){toast('That doesn\'t look like a slate.json file.');e.target.value='';return}
+  let added=0,scored=0,same=0,bad=0;
+  await write(async()=>{
+    for(const x of j.games){
+      const sp=Math.abs(num(x.spread,0));
+      if(x.id==null||!x.fav||!x.dog||!sp){bad++;continue}
+      const id='cfbd-'+String(x.id).replace(/[^\w-]/g,''),cur=gameById(id);
+      if(!cur){
+        const g={week:num(x.week,0),fav:String(x.fav).slice(0,40),dog:String(x.dog).slice(0,40),spread:sp,kick:x.kick||'',final:!!x.final};
+        if(x.final){g.favScore=num(x.favScore,0);g.dogScore=num(x.dogScore,0)}
+        await db.doc('games/'+id).set(g);added++;continue}
+      const patch={};
+      if(x.final&&(!cur.final||cur.favScore!==num(x.favScore,0)||cur.dogScore!==num(x.dogScore,0))){patch.favScore=num(x.favScore,0);patch.dogScore=num(x.dogScore,0);patch.final=true;scored++}
+      if(x.kick&&x.kick!==cur.kick&&!started(cur))patch.kick=x.kick;
+      if(Object.keys(patch).length)await db.doc('games/'+id).update(patch);else same++}
+    toast(`Imported: ${added} new, ${scored} scores updated, ${same} unchanged${bad?`, ${bad} skipped`:''}`)});
+  e.target.value='';
 });
 
 function fillSettings(){const L=S.league;$('#sName').value=L.name||'';$('#sWeek').value=num(L.week,1);$('#sCov').value=num(L.cover,1);$('#sOut').value=num(L.outright,2)}
